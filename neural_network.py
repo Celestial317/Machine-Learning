@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 
 ''' to implement a neural network from scratch i will need following arch:
 IP -> hidden layer -> output layer
@@ -22,29 +21,27 @@ then backprop will be applied by chain rule
 '''
 
 class NeuralNetwork:
-    def __init__(self, input_mat, w1, b1, w2, b2, hidden, output):
+    def __init__(self, input_mat, w1, b1, w2, b2):
         self.w1 = w1
         self.b1 = b1
         self.w2 = w2
         self.b2 = b2
         self.input_mat = input_mat
-        self.hidden = hidden
-        self.output = output
 
     def forward(self, input_mat):
-        self.z1 = np.dot(input_mat, self.w1) + self.b1
-        self.a1 = self.relu(self.z1)
+        self.z1 = np.dot(input_mat, self.w1) + self.b1 
+        self.a1 = self.relu(self.z1) 
         self.z2 = np.dot(self.a1, self.w2) + self.b2
-        self.a2 = self.sigmoid(self.z2)
+        self.a2 = self.sigmoid(self.z2) #this is output layer stuff
         return self.a2
     
     def backward(self, y_true, y_pred):
-        self.dz2 = y_pred - y_true
-        self.dw2 = np.dot(self.a1.T, self.dz2) / y_true.shape[0]
-        self.db2 = np.sum(self.dz2, axis=0, keepdims=True) / y_true.shape[0]
+        self.dz2 = y_pred - y_true #derivative of L wrt z2
+        self.dw2 = np.dot(self.a1.T, self.dz2) / y_true.shape[0] # dL/dw2 = dL/dz2 * dz2/dw2
+        self.db2 = np.sum(self.dz2, axis=0, keepdims=True) / y_true.shape[0] #as z=wx+b so dz/db=1
         self.dz1 = np.dot(self.dz2, self.w2.T) * self.relu_derivative(self.z1)
         self.dw1 = np.dot(self.input_mat.T, self.dz1) / y_true.shape[0]
-        self.db1 = np.sum(self.dz1, axis=0, keepdims=True) / y_true.shape[0]
+        self.db1 = np.sum(self.dz1, axis=0, keepdims=True) / y_true.shape[0] 
         return self.dw1, self.db1, self.dw2, self.db2
     
     def update_weights(self, learning_rate):
@@ -58,7 +55,10 @@ class NeuralNetwork:
         return np.maximum(0, x)
         
     def relu_derivative(self, x):
-        return np.where(x > 0, 1, 0)
+        if x>0:
+            return 1
+        else:
+            return 0
     
     def sigmoid(self, x):
         return 1 / (1 + np.exp(-x))
@@ -67,8 +67,8 @@ class NeuralNetwork:
         return x * (1 - x)
 
     def accuracy(self, y_true, y_pred):
-        correct_predictions = np.sum(np.argmax(y_true, axis=1) == np.argmax(y_pred, axis=1))
-        accuracy = correct_predictions / y_true.shape[0]
+        correct_predictions = np.sum(np.argmax(y_true, axis=1) == np.argmax(y_pred, axis=1)) #just checking where y_true == y_pred
+        accuracy = correct_predictions / y_true.shape[0] #to average, divided by y_true by no. of rows i.e. the shape[0] thingy
         return accuracy
 
 
@@ -77,7 +77,7 @@ class Model:
         self.input_dim = input_dim
         self.hidden_dim = hidden_dim
         self.output_dim = output_dim
-        self.w1 = np.random.rand(input_dim, hidden_dim) * 0.1
+        self.w1 = np.random.rand(input_dim, hidden_dim) * 0.1 #randomly initialised else if all w=0 then no learning
         self.b1 = np.random.rand(1, hidden_dim)
         self.w2 = np.random.rand(hidden_dim, output_dim) * 0.1
         self.b2 = np.random.rand(1, output_dim)
@@ -86,7 +86,7 @@ class Model:
         for epoch in range(epochs):
             y_pred = nn.forward(input_mat)
             accuracy = nn.accuracy(y_true, y_pred)
-            print(f"Epoch {epoch+1}/{epochs}, Accuracy: {accuracy:.4f}")
+            print(f"Epoch {epoch}, Accuracy: {accuracy:.4f}")
             
             nn.backward(y_true, y_pred)
             nn.update_weights(learning_rate)
